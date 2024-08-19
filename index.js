@@ -1,33 +1,25 @@
 const express = require("express");
-const axios = require("axios");
+const { translate } = require("@vitalets/google-translate-api");
 const app = express();
 
 app.use(express.json());
 
-app.post("/translate", async (req, res) => {
-  const { text, to } = req.body;
+app.post("/myTranslate", (req, res) => {
+  const { text, fromLang, toLang } = req.body;
 
-  try {
-    const response = await axios.post(
-      "https://translate.google.com/_/TranslateWebserverUi/data/batchexecute",
-      {},
-      {
-        params: {
-          rpcids: "MkEWBc",
-          "f.req": JSON.stringify([[[text, to]]]),
-        },
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        },
-      }
-    );
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
+  // Perform the translation
+  translate(text, { from: fromLang, to: toLang })
+    .then((response) => {
+      // Send the translated text as response
+      res.status(200).json({ translatedText: response.text });
+    })
+    .catch((err) => {
+      console.error("Error during translation:", err);
+      res.status(500).json({ error: "Translation failed" });
+    });
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
